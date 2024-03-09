@@ -20,3 +20,24 @@ nvm use
 # use the specific node version for the specific project
 ```
 
+```js
+console.log('A');
+setTimeout(() => {
+  console.log('B');
+}, 0);
+console.log('C');
+console.log('D');
+console.log('E');
+// The order of the output is A C D E B
+
+console.log('A');
+process.nextTick(() => {
+  console.log('B');
+});
+console.log('C');
+console.log('D');
+console.log('E');
+// Same as the previous example, when the main process is done, the event loop will execute the nextTick queue.
+
+```
+
