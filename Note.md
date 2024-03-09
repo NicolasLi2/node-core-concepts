@@ -38,6 +38,10 @@ console.log('C');
 console.log('D');
 console.log('E');
 // Same as the previous example, when the main process is done, the event loop will execute the nextTick queue.
+```
 
+```js
+90 >>> 1  
+// shift 90 to the right by 1 bit, the result is (90 / 2) = 45
 ```
 
