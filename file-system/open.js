@@ -17,13 +17,13 @@ const fs = require('node:fs/promises');
     const position = 0;
 
     // read from the first character to the end of the file
-    const content = await commandFileHandler.read(
-      buff,
-      offset,
-      length,
-      position
-    );
-    console.log(content);
+    await commandFileHandler.read(buff, offset, length, position); // after executing this line, the buffer is filled with the file content
+
+    // decoder 01 => meaningful
+    // encoder meaningful => 01
+    // Node.js only works on character encoder and decoder
+
+    console.log(buff.toString('utf-8'));
   });
 
   const watcher = fs.watch('./command.txt');
