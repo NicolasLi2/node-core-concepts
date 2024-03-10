@@ -4,6 +4,7 @@
 // Execution time: 10s
 // CPU usage: 100% (one core)
 // Memory usage: 45MB
+/*
 const fs = require('node:fs/promises');
 (async () => {
   console.time('writeMany');
@@ -44,5 +45,28 @@ const fs3 = require('node:fs/promises');
     const buff = Buffer.from(` ${i} `, 'utf-8');
     stream.write(buff);
   }
+  console.timeEnd('writeMany');
+})();
+
+*/
+const fs4 = require('node:fs/promises');
+(async () => {
+  console.time('writeMany');
+  const fileHandler = await fs4.open('test.txt', 'w');
+  const stream = fileHandler.createWriteStream();
+  console.log(stream.writableHighWaterMark); // 16384 bytes
+  console.log(stream.writableLength); // 0
+
+  const buff = Buffer.from('hello');
+
+  stream.write(buff);
+  stream.write(buff);
+  stream.write(buff);
+  console.log(stream.writableLength); // 15
+
+  // for (let i = 0; i < 1000000; i++) {
+  //   const buff = Buffer.from(` ${i} `, 'utf-8');
+  //   stream.write(buff);
+  // }
   console.timeEnd('writeMany');
 })();
