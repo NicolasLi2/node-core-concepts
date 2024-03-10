@@ -54,15 +54,20 @@ const fs4 = require('node:fs/promises');
   console.time('writeMany');
   const fileHandler = await fs4.open('test.txt', 'w');
   const stream = fileHandler.createWriteStream();
+
+  // you should never let stream.writableLength exceed stream.writableHighWaterMark, otherwise you will have some performance issues
   console.log(stream.writableHighWaterMark); // 16384 bytes
-  console.log(stream.writableLength); // 0
 
-  const buff = Buffer.from('hello');
+  const buff = Buffer.alloc(16383, 97);
+  console.log(stream.write(buff)); // true
+  console.log(stream.write(Buffer.alloc(1, 'a'))); // false
+  // if stream.write return false, you should stop writing more data to the stream
 
-  stream.write(buff);
-  stream.write(buff);
-  stream.write(buff);
-  console.log(stream.writableLength); // 15
+  // when buffer is full, we emit 'drain' event and empty the buffer
+  stream.on('drain', async () => {
+    console.log(stream.writableLength); // 0
+    console.log('We are now safe to write more!');
+  });
 
   // for (let i = 0; i < 1000000; i++) {
   //   const buff = Buffer.from(` ${i} `, 'utf-8');
