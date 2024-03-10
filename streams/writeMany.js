@@ -55,23 +55,55 @@ const fs4 = require('node:fs/promises');
   const fileHandler = await fs4.open('test.txt', 'w');
   const stream = fileHandler.createWriteStream();
 
-  // you should never let stream.writableLength exceed stream.writableHighWaterMark, otherwise you will have some performance issues
-  console.log(stream.writableHighWaterMark); // 16384 bytes
+  // // you should never let stream.writableLength exceed stream.writableHighWaterMark, otherwise you will have some performance issues
+  // console.log(stream.writableHighWaterMark); // 16384 bytes
 
-  const buff = Buffer.alloc(16383, 97);
-  console.log(stream.write(buff)); // true
-  console.log(stream.write(Buffer.alloc(1, 'a'))); // false
-  // if stream.write return false, you should stop writing more data to the stream
+  // const buff = Buffer.alloc(16383, 97);
+  // console.log(stream.write(buff)); // true
+  // console.log(stream.write(Buffer.alloc(1, 'a'))); // false
+  // // if stream.write return false, you should stop writing more data to the stream
 
-  // when buffer is full, we emit 'drain' event and empty the buffer
-  stream.on('drain', async () => {
-    console.log(stream.writableLength); // 0
-    console.log('We are now safe to write more!');
-  });
+  // // when buffer is full, we emit 'drain' event and empty the buffer
+  // stream.on('drain', async () => {
+  //   console.log(stream.writableLength); // 0
+  //   console.log('We are now safe to write more!');
+  // });
 
   // for (let i = 0; i < 1000000; i++) {
   //   const buff = Buffer.from(` ${i} `, 'utf-8');
-  //   stream.write(buff);
+  //   if (stream.write(buff) === false) {
+  //     await new Promise((resolve) => stream.once('drain', resolve));
+  //   }
   // }
-  console.timeEnd('writeMany');
+
+  // Rewrite previous code by using drain event to avoid memory issues. This is the correct way to use stream. Memory usage is 45MB, previous version is 200MB
+  let i = 0;
+
+  const writeMany = () => {
+    while (i < 1000000) {
+      const buff = Buffer.from(` ${i} `, 'utf-8');
+
+      // this is our last write, so we end the stream
+      if (i === 999999) {
+        return stream.end(buff);
+      }
+
+      if (!stream.write(buff)) {
+        break;
+      }
+      i++;
+    }
+  };
+
+  writeMany();
+
+  // resume our loop once our stream's internal buffer is emptied
+  stream.on('drain', () => {
+    writeMany();
+  });
+
+  stream.on('finish', async () => {
+    console.timeEnd('writeMany');
+    fileHandler.close();
+  });
 })();
