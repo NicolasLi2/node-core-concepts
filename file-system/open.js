@@ -1,7 +1,25 @@
-// because "All <FileHandle> objects are <EventEmitter>s.", refactoring the code to use the EventEmitter API
+// using the fs module to open a file and create a new file if it doesn't exist
 const fs = require('node:fs/promises');
 
 (async () => {
+  const createFile = async (path) => {
+    try {
+      // we want to check whether or not we already have that file
+      const existingFileHandle = await fs.open(path, 'r');
+      existingFileHandle.close();
+
+      // we already have that file...
+      return console.log(`The file ${path} already exists`);
+    } catch (error) {
+      // we don't have the file, now we should create it
+      const newFileHandle = await fs.open(path, 'w');
+      console.log('A new file has been created');
+      newFileHandle.close();
+    }
+  };
+  // commands
+  const CREATE_FILE = 'create a file';
+
   const commandFileHandler = await fs.open('./command.txt', 'r');
 
   commandFileHandler.on('change', async () => {
@@ -19,15 +37,17 @@ const fs = require('node:fs/promises');
     // read from the first character to the end of the file
     await commandFileHandler.read(buff, offset, length, position); // after executing this line, the buffer is filled with the file content
 
-    // decoder 01 => meaningful
-    // encoder meaningful => 01
-    // Node.js only works on character encoder and decoder
+    const command = buff.toString('utf-8');
 
-    console.log(buff.toString('utf-8'));
+    // create a file:
+    if (command.includes(CREATE_FILE)) {
+      const filePath = command.substring(CREATE_FILE.length + 1);
+      createFile(filePath);
+    }
   });
 
+  // watcher...
   const watcher = fs.watch('./command.txt');
-
   for await (const event of watcher) {
     if (event.eventType === 'change') {
       commandFileHandler.emit('change');
