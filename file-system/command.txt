@@ -1,1 +1,1 @@
-create a file open.txt
+add to the file open.txt this content: some text
