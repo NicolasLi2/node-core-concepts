@@ -79,12 +79,14 @@ const fs4 = require('node:fs/promises');
   // Rewrite previous code by using drain event to avoid memory issues. This is the correct way to use stream. Memory usage is 45MB, previous version is 200MB
   let i = 0;
 
+  const numberOfWrites = 1000000;
+
   const writeMany = () => {
-    while (i < 1000000) {
+    while (i < numberOfWrites) {
       const buff = Buffer.from(` ${i} `, 'utf-8');
 
       // this is our last write, so we end the stream
-      if (i === 999999) {
+      if (i === numberOfWrites - 1) {
         return stream.end(buff);
       }
 
